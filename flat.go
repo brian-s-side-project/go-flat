@@ -1,3 +1,5 @@
+// Package goflat provides functions for flattening and unflattening JSON objects.
+// It supports flattening JSON arrays as well as nested maps.
 package goflat
 
 import (
@@ -22,6 +24,21 @@ func DefaultOptions() Options {
 
 // FlattenJSON flattens a JSON object into a map[string]interface{} using the specified options.
 // It supports flattening JSON arrays as well.
+//
+// Example:
+//
+//	data := []byte(`{"name": "John", "age": 30, "address": {"city": "New York", "state": "NY"}}`)
+//	options := DefaultOptions()
+//	flattened, err := FlattenJSON(data, options)
+//	if err != nil {
+//		fmt.Println("Error:", err)
+//		return
+//	}
+//	fmt.Println(flattened)
+//
+// Output:
+//
+//	map[address.city:New York address.state:NY age:30 name:John]
 func FlattenJSON(data []byte, options Options) (map[string]interface{}, error) {
 	var result map[string]interface{}
 	err := json.Unmarshal(data, &result)
@@ -36,6 +53,24 @@ func FlattenJSON(data []byte, options Options) (map[string]interface{}, error) {
 
 // FlattenMap flattens a map[string]interface{} into a map[string]interface{} using the specified options.
 // It supports flattening nested maps as well.
+//
+// Example:
+//
+//	data := map[string]interface{}{
+//		"name": "John",
+//		"age": 30,
+//		"address": map[string]interface{}{
+//			"city":  "New York",
+//			"state": "NY",
+//		},
+//	}
+//	options := DefaultOptions()
+//	flattened := FlattenMap(data, options)
+//	fmt.Println(flattened)
+//
+// Output:
+//
+//	map[address.city:New York address.state:NY age:30 name:John]
 func FlattenMap(data map[string]interface{}, options Options) map[string]interface{} {
 	flattened := make(map[string]interface{})
 	flatten("", data, flattened, options.KeyDelimiter, options.MaxDepth)
@@ -64,6 +99,26 @@ func flatten(prefix string, value interface{}, flattened map[string]interface{},
 }
 
 // UnflattenJSON unflattens a flattened JSON object into its original structure.
+//
+// Example:
+//
+//	flattened := map[string]interface{}{
+//		"address.city":  "New York",
+//		"address.state": "NY",
+//		"age":           30,
+//		"name":          "John",
+//	}
+//	options := DefaultOptions()
+//	unflattened, err := UnflattenJSON(flattened, options)
+//	if err != nil {
+//		fmt.Println("Error:", err)
+//		return
+//	}
+//	fmt.Println(unflattened)
+//
+// Output:
+//
+//	map[address:map[city:New York state:NY] age:30 name:John]
 func UnflattenJSON(flattened map[string]interface{}, options Options) (interface{}, error) {
 	result := make(map[string]interface{})
 	for key, value := range flattened {
